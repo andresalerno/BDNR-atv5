@@ -30,10 +30,20 @@ except Exception as e:
 
 # Função de inserção no Neo4j
 def insert_user(session, usuario_data):
-    user_id = str(uuid4())  # Gera um ID único para o usuário
+    user_id = str(uuid4())
     try:
         query = """
-        CREATE (u:Usuario {user_id: $user_id, nome: $nome, email: $email, telefone: $telefone, tipo_usuario: $tipo_usuario, documento: $documento, dados_pessoa_fisica: $dados_pessoa_fisica, dados_empresa: $dados_empresa})
+        CREATE (u:Usuario {
+            user_id: $user_id,
+            nome: $nome,
+            email: $email,
+            telefone: $telefone,
+            tipo_usuario: $tipo_usuario,
+            documento: $documento,
+            dados_pessoa_fisica: $dados_pessoa_fisica,
+            dados_empresa: $dados_empresa,
+            favoritos: $favoritos
+        })
         """
         session.run(query, parameters={
             "user_id": user_id,
@@ -42,11 +52,12 @@ def insert_user(session, usuario_data):
             "telefone": usuario_data["telefone"],
             "tipo_usuario": usuario_data["tipo_usuario"],
             "documento": usuario_data["documento"],
-            "dados_pessoa_fisica": json.dumps(usuario_data["dados_pessoa_fisica"]),
-            "dados_empresa": json.dumps(usuario_data["dados_empresa"])
+            "dados_pessoa_fisica": json.dumps(usuario_data.get("dados_pessoa_fisica", {})),
+            "dados_empresa": json.dumps(usuario_data.get("dados_empresa", {})),
+            "favoritos": json.dumps(usuario_data.get("favoritos", []))
         })
         print(f"Usuário {usuario_data['nome']} inserido com sucesso no Neo4j.")
-        return user_id  # Retorna o ID do usuário para ser usado na criação dos relacionamentos
+        return user_id
     except Exception as e:
         print(f"Erro ao inserir usuário {usuario_data['nome']}: {e}")
         return None
@@ -61,7 +72,8 @@ def search_user(session, user_id):
         result = session.run(query, parameters={"user_id": user_id})
         user = result.single()
         if user:
-            print(f"Usuário encontrado: {user['u']['nome']}, Email: {user['u']['email']}")
+            u = user['u']
+            print(f"Usuário encontrado: {u['nome']}, Email: {u['email']}, Favoritos: {u.get('favoritos')}")
         else:
             print("Usuário não encontrado.")
     except Exception as e:
