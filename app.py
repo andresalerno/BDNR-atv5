@@ -17,9 +17,9 @@ def connect_to_neo4j():
         username = "neo4j"  # Nome de usuário padrão do Neo4j   
     password = os.getenv("NEO4J_PASSWORD")  # Substitua com a senha do seu banco Neo4j
     driver = GraphDatabase.driver(uri, auth=(username, password))
-    session = driver.session()
+    # session = driver.session()
     # print("Conexão bem-sucedida com o Neo4j!")
-    return session
+    return driver
 
 # Tentativa de conexão com o banco Neo4j
 try:
@@ -261,56 +261,62 @@ def search_products_in_purchase(session, compra_id):
 # Função principal para inicializar e executar as ações
 def main():
     # Conectar ao Neo4j
-    session = connect_to_neo4j()
+    # session = connect_to_neo4j()
 
-    # Exemplo de inserção de usuário
-    usuario_data = {
-        "nome": "João Silva",
-        "email": "joao@email.com",
-        "telefone": "1234567890",
-        "tipo_usuario": "pessoa_fisica",
-        "documento": "123.456.789-00",
-        "dados_pessoa_fisica": {"cpf": "123.456.789-00", "data_nascimento": "1990-01-01", "endereco": "Rua X, 123"},
-        "dados_empresa": None
-    }
-    user_id = insert_user(session, usuario_data)
+    driver = connect_to_neo4j()
 
-    # Exemplo de pesquisa de usuário
-    if user_id:  # Verifique se o ID foi retornado com sucesso
-        search_user(session, user_id)  # Passar o ID do usuário inserido
+    with driver.session() as session:
 
-    # Exemplo de inserção de produto
-    produto_data = {
-        "nome": "Celular",
-        "descricao": "iPhone 14 Pro Max",
-        "id_vendedor": "u1",
-        "status": "ativo",
-        "precos": [
-            {"preco": 1000, "data_inicio": "2024-01-01", "data_fim": "2024-05-01"},
-            {"preco": 900, "data_inicio": "2024-05-02", "data_fim": None}
-        ]
-    }
-    produto_id = insert_product(session, produto_data, user_id)
+        # Exemplo de inserção de usuário
+        usuario_data = {
+            "nome": "João Silva",
+            "email": "joao@email.com",
+            "telefone": "1234567890",
+            "tipo_usuario": "pessoa_fisica",
+            "documento": "123.456.789-00",
+            "dados_pessoa_fisica": {"cpf": "123.456.789-00", "data_nascimento": "1990-01-01", "endereco": "Rua X, 123"},
+            "dados_empresa": None
+        }
+        user_id = insert_user(session, usuario_data)
 
-    # Exemplo de pesquisa de produto
-    if produto_id:  # Verifique se o ID foi retornado com sucesso
-        search_product(session, produto_id)  # Passar o ID do produto inserido
+        # Exemplo de pesquisa de usuário
+        if user_id:  # Verifique se o ID foi retornado com sucesso
+            search_user(session, user_id)  # Passar o ID do usuário inserido
 
-    # Exemplo de inserção de compra
-    compra_data = {
-        "id_usuario": "u1",
-        "data": "2024-04-01",
-        "preco_total": 1800,
-        "status": "pendente",
-        "itens": [
-            {"id_produto": "p1", "quantidade": 1, "preco_unitario": 1000},
-            {"id_produto": "p2", "quantidade": 1, "preco_unitario": 800}
-        ]
-    }
+        # Exemplo de inserção de produto
+        produto_data = {
+            "nome": "Celular",
+            "descricao": "iPhone 14 Pro Max",
+            "id_vendedor": "u1",
+            "status": "ativo",
+            "precos": [
+                {"preco": 1000, "data_inicio": "2024-01-01", "data_fim": "2024-05-01"},
+                {"preco": 900, "data_inicio": "2024-05-02", "data_fim": None}
+            ]
+        }
+        produto_id = insert_product(session, produto_data, user_id)
 
-    user_id = "u1"  # Este é o ID do usuário
-    produto_ids = ["p1", "p2"]  # IDs dos produtos que estão sendo comprados
-    compra_id = insert_purchase(session, compra_data, user_id, produto_ids)  # Passando o user_id e produto_ids
+        # Exemplo de pesquisa de produto
+        if produto_id:  # Verifique se o ID foi retornado com sucesso
+            search_product(session, produto_id)  # Passar o ID do produto inserido
+
+        # Exemplo de inserção de compra
+        compra_data = {
+            "id_usuario": "u1",
+            "data": "2024-04-01",
+            "preco_total": 1800,
+            "status": "pendente",
+            "itens": [
+                {"id_produto": "p1", "quantidade": 1, "preco_unitario": 1000},
+                {"id_produto": "p2", "quantidade": 1, "preco_unitario": 800}
+            ]
+        }
+
+        user_id = "u1"  # Este é o ID do usuário
+        produto_ids = ["p1", "p2"]  # IDs dos produtos que estão sendo comprados
+        compra_id = insert_purchase(session, compra_data, user_id, produto_ids)  # Passando o user_id e produto_ids
+
+    driver.close()  # Fechar o driver após o uso
 
 if __name__ == "__main__":
     main()
